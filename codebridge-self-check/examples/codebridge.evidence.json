@@ -1,9 +1,0 @@
-{
-  "version": 1,
-  "criteria": {
-    "AC-001": { "checks": ["ac-reset-request"], "files": ["src/auth/reset.ts"] },
-    "AC-002": { "checks": ["ac-reset-expiry"], "files": ["src/auth/reset.ts"] },
-    "AC-003": { "checks": ["ac-reset-login"], "files": [] },
-    "AC-004": { "checks": ["ac-legacy-login"], "files": [] }
-  }
-}

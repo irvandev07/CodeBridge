@@ -1,7 +1,0 @@
-node_modules/
-dist/
-.codebridge/
-coverage/
-.env
-.env.*
-!.env.example
