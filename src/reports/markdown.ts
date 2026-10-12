@@ -25,7 +25,11 @@ export function renderMarkdown(report: CodeBridgeReport): string {
     for (const e of c.evidence) s.push(`- **${e.status}** [${e.kind}]: ${e.description}${e.file ? ` — \`${e.file}\`` : ""}`);
     s.push("");
   }
-  s.push("## Deterministic findings", "");
+  s.push("## Test discovery (TAP)", "", "| Check | Exact test title | Result |", "|---|---|---|",
+    ...(report.testCases ?? []).map(t => `| ${cell(t.checkId)} | ${cell(t.name)} | ${t.status} |`), "",
+    "## Evidence graph", "", `Nodes: ${report.evidenceGraph?.nodes.length ?? 0}; edges: ${report.evidenceGraph?.edges.length ?? 0}`, "");
+  for (const edge of report.evidenceGraph?.edges ?? []) s.push(`- \`${edge.from}\` → **${edge.relation}** → \`${edge.to}\``);
+  s.push("", "## Deterministic findings", "");
   if (!report.findings.length) s.push("No findings.");
   for (const f of report.findings) s.push(`- **${f.severity.toUpperCase()}** ${f.ruleId}: ${f.message}${f.file ? ` (\`${f.file}\`${f.line ? `:${f.line}` : ""})` : ""}`);
   s.push("", "## Checks", "", "| Check | Status | Duration (ms) |", "|---|---|---:|",

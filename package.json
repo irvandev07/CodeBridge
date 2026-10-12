@@ -1,8 +1,8 @@
 {
   "name": "codebridge-pro-beta",
-  "version": "0.2.0",
+  "version": "0.5.0",
   "private": false,
-  "description": "Intent-to-code verification CLI with risk rules, evidence map, Git diff, HTML and SARIF reporting",
+  "description": "Intent-to-code verification CLI with Smart Evidence Engine and GitHub PR Intelligence",
   "type": "module",
   "bin": {
     "codebridge": "./dist/cli/index.js"

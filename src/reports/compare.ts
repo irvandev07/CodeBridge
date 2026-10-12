@@ -4,7 +4,7 @@ const rank = (status: CriterionResult["status"]): number => ({ conflict: 0, unve
 function valid(v: unknown): v is CodeBridgeReport {
   if (typeof v !== "object" || v === null) return false;
   const r = v as Partial<CodeBridgeReport>;
-  return (r.schemaVersion === "1.1" || r.schemaVersion === "1.0") && ["pass", "review", "fail"].includes(r.decision ?? "") && Array.isArray(r.criteria) && Array.isArray(r.findings);
+  return (["1.0", "1.1", "1.2", "1.3"] as string[]).includes(String(r.schemaVersion)) && ["pass", "review", "fail"].includes(r.decision ?? "") && Array.isArray(r.criteria) && Array.isArray(r.findings);
 }
 export async function loadReport(filename: string): Promise<CodeBridgeReport> {
   const parsed: unknown = JSON.parse(await readFile(filename, "utf8"));

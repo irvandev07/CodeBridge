@@ -31,7 +31,7 @@ it("CLI doctor/check/explain/compare and four report formats", () => {
     assert.equal(res.status, 0, res.stderr + res.stdout);
     for (const file of ["report.md", "report.json", "report.html", "report.sarif"]) assert.ok(existsSync(path.join(cwd, ".codebridge", file)), file);
     const r = JSON.parse(readFileSync(path.join(cwd, ".codebridge", "report.json"), "utf8"));
-    assert.equal(r.schemaVersion, "1.1");
+    assert.equal(r.schemaVersion, "1.3");
     assert.equal(r.criteria.find(x => x.id === "AC-MAIN").status, "verified");
     assert.equal(r.decision, "review");
     assert.deepEqual(r.changedFiles, ["app.js", "codebridge.config.json", "codebridge.evidence.json", "goal.md"]);

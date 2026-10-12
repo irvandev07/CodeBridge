@@ -61,3 +61,22 @@ flowchart TD
 4. `--changed-only` incremental mode with cache keyed by diff+check command.
 5. Controlled plugin API with sandbox boundaries and deterministic built-in rules.
 6. PR comments/GitHub check annotations using read-only workflows and minimal permissions.
+
+
+## v0.3: Evidence Graph & TAP test discovery
+
+Pipeline: `runChecks` → `discoverTapTests` (only unindented `ok` / `not ok` TAP result lines) → `mapEvidence` (exact manifest links) → `buildEvidenceGraph` → reports. No hidden model inference.
+
+Graph edge types: `validated-by` (criterion → test/check), `observed-in` (test → check), `references` (criterion → file). Test nodes are identified by check ID and exact title. In v0.3 only mapped tests appear in the graph; unrelated discovered tests remain in `testCases`.
+
+Known limitations: cannot infer semantic correctness of tests; TAP subset only, skips nested results; large outputs truncated; evidence manifest is trusted repository configuration; `pass` is conditional on selected tests and policy, not mathematical proof.
+
+## GitHub PR Intelligence (v0.5)
+
+- `src/github/pr.ts`: `renderPrComment()` for local/offline Markdown; `validateReportForPr()` for version and commit SHA constraints; `publishPrComment()` with GitHub REST client and bot-comment upsert.
+- `src/cli/index.ts`: adds `pr-summary` and `pr-comment` commands.
+- `scripts/publish-pr-comment.mjs`: privileged `workflow_run` entrypoint, reading JSON-only artifacts.
+- `.github/workflows/codebridge-pr.yml`: untrusted PR analysis (read only).
+- `.github/workflows/codebridge-pr-publish.yml`: trusted publishing with `issues: write`, checking against workflow SHA and live PR SHA.
+
+The workflow security boundary is critical: `pull_request_target` and secrets are deliberately not used for untrusted PR execution. The publisher runs default-branch tooling, treats downloaded artifacts as untrusted data, and refuses mismatched commit SHAs. Report content is not an approval or a substitute for human review.

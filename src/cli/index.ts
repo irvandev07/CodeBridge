@@ -9,8 +9,9 @@ import { loadEvidenceManifest, validateEvidenceReferences } from "../intent/evid
 import { exitCode } from "../core/policy.js";
 import { loadReport, compareReports } from "../reports/compare.js";
 import { resolveInside, ensureInsideReal } from "../utils/paths.js";
+import { renderPrComment, publishPrComment } from "../github/pr.js";
 
-const HELP = `CodeBridge Pro Beta v0.2
+const HELP = `CodeBridge Pro Beta v0.5
 
 Usage:
   codebridge init [--force]
@@ -18,6 +19,8 @@ Usage:
   codebridge check [--base <ref>] [--format all|both|json|markdown|html|sarif] [--out <dir>] [--strict] [--verbose]
   codebridge explain <AC-ID> [--report <path>]
   codebridge compare <baseline.json> <current.json>
+  codebridge pr-summary [--report <report.json>] [--baseline <previous.json>]
+  codebridge pr-comment --repo <owner/repo> --pr <number> [--report <path>] [--baseline <path>] [--expected-sha <gitsha>] [--dry-run]
   codebridge --help | --version
 
 Exit: 0=pass/review, 1=fail (or strict review), 2=usage/config/runtime error`;
@@ -48,7 +51,7 @@ async function init(force: boolean): Promise<void> {
       maxConcurrency: 2, strictReview: false, outputDirectory: ".codebridge",
       rules: { enabled: true, maxChangedFiles: 50, maxAddedLines: 1500, forbiddenPaths: [".env", ".env.*", "*.pem", "*.key"], detectCredentials: true, detectPrivateKeys: true, detectDebugStatements: false }
     }, null, 2) + "\n",
-    "codebridge.evidence.json": JSON.stringify({ version: 1, criteria: { "AC-MAIN": { checks: [], files: [], note: "Tambahkan check spesifik untuk memverifikasi kriteria." } } }, null, 2) + "\n"
+    "codebridge.evidence.json": JSON.stringify({ version: 2, criteria: { "AC-MAIN": { checks: [], files: [], tests: [], note: "Tambahkan check spesifik untuk memverifikasi kriteria." } } }, null, 2) + "\n"
   };
   for (const [name, contents] of Object.entries(examples)) {
     try {
@@ -95,7 +98,7 @@ async function compare(baseFile: string, currentFile: string): Promise<void> {
 async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);
   if (!command || ["help", "--help", "-h"].includes(command)) { console.log(HELP); return; }
-  if (["--version", "-V"].includes(command)) { console.log("0.2.0"); return; }
+  if (["--version", "-V"].includes(command)) { console.log("0.5.0"); return; }
   if (command === "init") {
     const parsed = parseArgs(args, ["--force"], []);
     if (parsed.positional.length) throw new Error("init tidak menerima positional arguments");
@@ -116,6 +119,23 @@ async function main(): Promise<void> {
     if (parsed.positional.length !== 2) throw new Error("Usage: compare <baseline.json> <current.json>");
     return compare(parsed.positional[0], parsed.positional[1]);
   }
+  if (command === "pr-summary" || command === "pr-comment") {
+    const parsed = parseArgs(args, ["--dry-run"], ["--repo", "--pr", "--report", "--baseline", "--expected-sha"]);
+    if (parsed.positional.length) throw new Error("Argumen positional tidak diizinkan");
+    const reportFile = (parsed.options["--report"] as string | undefined) ?? ".codebridge/report.json";
+    const report = await loadReport(reportFile);
+    const baseline = parsed.options["--baseline"] ? await loadReport(parsed.options["--baseline"] as string) : undefined;
+    if (command === "pr-summary") { console.log(renderPrComment(report, baseline)); return; }
+    const repo = parsed.options["--repo"] as string | undefined ?? process.env.GITHUB_REPOSITORY;
+    const pr = Number(parsed.options["--pr"]);
+    if (!repo || !parsed.options["--pr"]) throw new Error("--repo dan --pr diperlukan (repo dapat dari GITHUB_REPOSITORY)");
+    const published = await publishPrComment({ repo, pr, report, previous: baseline,
+      expectedSha: parsed.options["--expected-sha"] as string | undefined,
+      token: process.env.GITHUB_TOKEN ?? "", dryRun: !!parsed.options["--dry-run"] });
+    console.log(`PR comment: ${published.action}${published.url ? ` — ${published.url}` : ""}`);
+    if (published.action === "dry-run") console.log(published.body);
+    return;
+  }
   if (command === "check") {
     const parsed = parseArgs(args, ["--strict", "--verbose", "--no-ai"], ["--base", "--format", "--out"]);
     if (parsed.positional.length) throw new Error(`Unexpected argument: ${parsed.positional.join(" ")}`);
@@ -124,7 +144,7 @@ async function main(): Promise<void> {
     const { report, outputDirectory } = await runCodeBridge({ cwd: process.cwd(), base: parsed.options["--base"] as string | undefined, format, out: parsed.options["--out"] as string | undefined });
     console.log(`CodeBridge: ${report.decision.toUpperCase()}`);
     console.log(`Criteria: ${report.summary.verified} verified, ${report.summary.partial} partial, ${report.summary.unverified} unverified, ${report.summary.conflict} conflict`);
-    console.log(`Changed files: ${report.summary.changedFiles} | Findings: ${report.findings.length}`);
+    console.log(`Changed files: ${report.summary.changedFiles} | Discovered TAP tests: ${report.testCases?.length ?? 0} | Findings: ${report.findings.length}`);
     for (const check of report.checks) {
       console.log(`  ${check.id}: ${check.status}${check.errorMessage ? ` — ${check.errorMessage}` : ""}`);
       if (parsed.options["--verbose"] && check.output) console.log(check.output);

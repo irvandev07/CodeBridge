@@ -15,6 +15,8 @@ export interface Evidence {
   status: "pass" | "fail" | "unknown";
   description: string;
   checkId?: string;
+  testName?: string;
+  provenance?: "manifest" | "tap" | "git";
   file?: string;
 }
 
@@ -52,15 +54,18 @@ export interface Finding {
 }
 
 export interface CodeBridgeReport {
-  schemaVersion: "1.1";
-  toolVersion: "0.2.0";
+  schemaVersion: "1.3";
+  toolVersion: "0.5.0";
   generatedAt: string;
   repository: string;
   baseRef: string;
+  commitSha?: string;
   changedFiles: string[];
   changeDetails: ChangedFile[];
   criteria: CriterionResult[];
   checks: CheckResult[];
+  testCases?: DiscoveredTest[];
+  evidenceGraph?: EvidenceGraph;
   findings: Finding[];
   decision: Decision;
   summary: {
@@ -86,3 +91,15 @@ export interface ReportComparison {
   newFindings: Finding[];
   resolvedFindingIds: string[];
 }
+
+export interface DiscoveredTest {
+  id: string;
+  checkId: string;
+  name: string;
+  status: "passed" | "failed" | "skipped";
+  source: "tap";
+  occurrence: number;
+}
+export interface EvidenceNode { id: string; type: "criterion" | "check" | "test" | "file"; label: string; status?: string; }
+export interface EvidenceEdge { from: string; to: string; relation: "validated-by" | "observed-in" | "references" | "changed"; }
+export interface EvidenceGraph { nodes: EvidenceNode[]; edges: EvidenceEdge[]; }
