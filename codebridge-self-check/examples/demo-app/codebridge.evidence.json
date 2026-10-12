@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "criteria": {
+    "AC-SUM": { "checks": ["test-sum"], "files": ["src/calculator.js"], "note": "Unit test test:sum covers addition." },
+    "AC-NEGATIVE": { "checks": ["test-negative"], "files": ["src/calculator.js"], "note": "Unit test test:negative covers negative inputs." }
+  }
+}
