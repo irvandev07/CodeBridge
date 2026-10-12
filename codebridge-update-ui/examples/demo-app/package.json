@@ -1,0 +1,10 @@
+{
+  "name": "codebridge-example-calculator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:sum": "node --test tests/sum.test.mjs",
+    "test:negative": "node --test tests/negative.test.mjs"
+  }
+}
