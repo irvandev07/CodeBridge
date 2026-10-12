@@ -1,0 +1,39 @@
+{
+  "baseRef": "main",
+  "goalFile": "goal.md",
+  "evidenceFile": "codebridge.evidence.json",
+  "commands": {
+    "test": [
+      "node",
+      "--test",
+      "--test-reporter=tap",
+      "tests/sum.test.mjs",
+      "tests/negative.test.mjs"
+    ]
+  },
+  "requiredChecks": [
+    "test"
+  ],
+  "failOn": [
+    "critical",
+    "high"
+  ],
+  "timeoutMs": 15000,
+  "maxConcurrency": 2,
+  "strictReview": false,
+  "outputDirectory": ".codebridge",
+  "rules": {
+    "enabled": true,
+    "maxChangedFiles": 50,
+    "maxAddedLines": 1500,
+    "forbiddenPaths": [
+      ".env",
+      ".env.*",
+      "*.pem",
+      "*.key"
+    ],
+    "detectCredentials": true,
+    "detectPrivateKeys": true,
+    "detectDebugStatements": false
+  }
+}
