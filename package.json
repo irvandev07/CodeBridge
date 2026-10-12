@@ -1,0 +1,26 @@
+{
+  "name": "codebridge-pro-beta",
+  "version": "0.2.0",
+  "private": false,
+  "description": "Intent-to-code verification CLI with risk rules, evidence map, Git diff, HTML and SARIF reporting",
+  "type": "module",
+  "bin": {
+    "codebridge": "./dist/cli/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "npm run build && node dist/cli/index.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "test:run": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  },
+  "license": "MIT"
+}
